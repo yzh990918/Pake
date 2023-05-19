@@ -30,7 +30,10 @@ output
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
-dist/
+dist
+!dist/about_pake.html
 !dist/cli.js
 !dist/.gitkeep
-.next/
+src-tauri/.cargo/config
+src-tauri/.cargo/
+.next

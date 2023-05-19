@@ -11,6 +11,7 @@ import tauriConf from './tauriConf.js';
 import log from 'loglevel';
 import { mergeTauriConfig } from './common.js';
 import { npmDirectory } from '@/utils/dir.js';
+import {isChinaDomain} from '@/utils/ip_addr.js';
 import logger from '@/options/logger.js';
 
 export default class MacBuilder implements IBuilder {
@@ -29,7 +30,7 @@ export default class MacBuilder implements IBuilder {
       // TODO 国内有可能会超时
       await installRust();
     } else {
-      log.error('Error: Pake need Rust to package your webapp!');
+      log.error('Error: Pake need Rust to package your webapp!!!');
       process.exit(2);
     }
   }
@@ -41,10 +42,34 @@ export default class MacBuilder implements IBuilder {
     await mergeTauriConfig(url, options, tauriConf);
     let dmgName: string;
     if (options.multiArch) {
-      await shellExec(`cd "${npmDirectory}" && npm install && npm run build:mac`);
+      const isChina = await isChinaDomain("www.npmjs.com");
+      if (isChina) {
+        logger.info("it's in China, use npm/rust cn mirror")
+        const rust_project_dir = path.join(npmDirectory, 'src-tauri', ".cargo");
+        const e1 = fs.access(rust_project_dir);
+        if (e1) {
+          await fs.mkdir(rust_project_dir, { recursive: true });
+        }
+        const project_cn_conf = path.join(npmDirectory, "src-tauri", "cn_config.bak");
+        const project_conf = path.join(rust_project_dir, "config");
+        fs.copyFile(project_cn_conf, project_conf);
+
+        const _ = await shellExec(
+          `cd "${npmDirectory}" && npm install --registry=https://registry.npmmirror.com && npm run build:mac`
+        );
+      } else {
+        const _ = await shellExec(`cd "${npmDirectory}" && npm install && npm run build:mac`);
+      }
       dmgName = `${name}_${tauriConf.package.version}_universal.dmg`;
     } else {
-      await shellExec(`cd "${npmDirectory}" && npm install && npm run build`);
+      const isChina = isChinaDomain("www.npmjs.com")
+      if (isChina) {
+        const _ = await shellExec(
+          `cd ${npmDirectory} && npm install --registry=https://registry.npmmirror.com && npm run build`
+        );
+      } else {
+        const _ = await shellExec(`cd ${npmDirectory} && npm install && npm run build`);
+      }
       let arch  = "x64";
       if (process.arch === "arm64") {
         arch = "aarch64";

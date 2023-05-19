@@ -5,6 +5,7 @@ import { checkRustInstalled, installRust } from '@/helpers/rust.js';
 import { PakeAppOptions } from '@/types.js';
 import { IBuilder } from './base.js';
 import { shellExec } from '@/utils/shell.js';
+import {isChinaDomain} from '@/utils/ip_addr.js';
 // @ts-expect-error 加上resolveJsonModule rollup会打包报错
 // import tauriConf from '../../src-tauri/tauri.windows.conf.json';
 import tauriConf from './tauriConf.js';
@@ -44,30 +45,49 @@ export default class LinuxBuilder implements IBuilder {
   async build(url: string, options: PakeAppOptions) {
     logger.debug('PakeAppOptions', options);
     const { name } = options;
-
     await mergeTauriConfig(url, options, tauriConf);
-    await shellExec(`cd "${npmDirectory}" && npm install && npm run build`);
+    const isChina = await isChinaDomain("www.npmjs.com");
+    if (isChina) {
+      logger.info("it's in China, use npm/rust cn mirror")
+      const rust_project_dir = path.join(npmDirectory, 'src-tauri', ".cargo");
+      const e1 = fs.access(rust_project_dir);
+      if (e1) {
+        await fs.mkdir(rust_project_dir, { recursive: true });
+      }
+      const project_cn_conf = path.join(npmDirectory, "src-tauri", "cn_config.bak");
+      const project_conf = path.join(rust_project_dir, "config");
+      fs.copyFile(project_cn_conf, project_conf);
 
+      const _ = await shellExec(
+        `cd "${npmDirectory}" && npm install --registry=https://registry.npmmirror.com && npm run build`
+      );
+    } else {
+      const _ = await shellExec(`cd "${npmDirectory}" && npm install && npm run build`);
+    }
     let arch: string;
     if (process.arch === "x64") {
       arch = "amd64";
     } else {
       arch = process.arch;
     }
-    const debName = `${name}_${tauriConf.package.version}_${arch}.deb`;
-    const appPath = this.getBuildAppPath(npmDirectory, "deb", debName);
-    const distPath = path.resolve(`${name}.deb`);
-    await fs.copyFile(appPath, distPath);
-    await fs.unlink(appPath);
-
-    const appImageName = `${name}_${tauriConf.package.version}_${arch}.AppImage`;
-    const appImagePath = this.getBuildAppPath(npmDirectory, "appimage", appImageName);
-    const distAppPath = path.resolve(`${name}.AppImage`);
-    await fs.copyFile(appImagePath, distAppPath);
-    await fs.unlink(appImagePath);
-    logger.success('Build success!');
-    logger.success('You can find the deb app installer in', distPath);
-    logger.success('You can find the AppImage app installer in', distAppPath);
+    if (options.targets === "deb" || options.targets === "all") {
+      const debName = `${name}_${tauriConf.package.version}_${arch}.deb`;
+      const appPath = this.getBuildAppPath(npmDirectory, "deb", debName);
+      const distPath = path.resolve(`${name}.deb`);
+      await fs.copyFile(appPath, distPath);
+      await fs.unlink(appPath);
+      logger.success('Build Deb success!');
+      logger.success('You can find the deb app installer in', distPath);
+    }
+    if (options.targets === "appimage" || options.targets === "all") {
+      const appImageName = `${name}_${tauriConf.package.version}_${arch}.AppImage`;
+      const appImagePath = this.getBuildAppPath(npmDirectory, "appimage", appImageName);
+      const distAppPath = path.resolve(`${name}.AppImage`);
+      await fs.copyFile(appImagePath, distAppPath);
+      await fs.unlink(appImagePath);
+      logger.success('Build AppImage success!');
+      logger.success('You can find the AppImage app installer in', distAppPath);
+    }
   }
 
   getBuildAppPath(npmDirectory: string, packageType: string, packageName: string) {

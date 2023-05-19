@@ -4,24 +4,22 @@
     "version": "1.0.0"
   },
   "tauri": {
-    "windows": [
-      {
-        "url": "https://musicforprogramming.net/",
-        "transparent": true,
-        "fullscreen": false,
-        "width": 1200,
-        "height": 780,
-        "resizable": true
-      }
-    ],
     "security": {
       "csp": null
     },
     "updater": {
       "active": false
+    },
+    "systemTray": {
+      "iconPath": "png/weread_512.png",
+      "iconAsTemplate": true
+    },
+    "allowlist": {
+      "all": true
     }
   },
   "build": {
+    "withGlobalTauri": true,
     "devPath": "../dist",
     "distDir": "../dist",
     "beforeBuildCommand": "",

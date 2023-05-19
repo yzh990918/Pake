@@ -1,6 +1,6 @@
 {
   "name": "pake-cli",
-  "version": "1.2.7",
+  "version": "2.0.5",
   "description": "🤱🏻 Turn any webpage into a desktop app with Rust. 🤱🏻 很简单的用 Rust 打包网页生成很小的桌面 App。",
   "engines": {
     "node": ">=16.0.0"
@@ -32,11 +32,11 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "npm run tauri dev",
-    "dev:debug": "npm run tauri dev -- --features devtools",
     "build": "npm run tauri build --release",
     "build:mac": "npm run tauri build -- --target universal-apple-darwin",
     "build:all-unix": "chmod +x ./script/build.sh && ./script/build.sh",
-    "build:all-windows": ".\\script\\build.bat",
+    "build:all-windows": "pwsh ./script/build.ps1",
+    "analyze": "cd src-tauri && cargo bloat --release --crates",
     "tauri": "tauri",
     "cli": "rollup -c rollup.config.js --watch",
     "cli:build": "cross-env NODE_ENV=production rollup -c rollup.config.js",
@@ -52,6 +52,7 @@
     "chalk": "^5.1.2",
     "commander": "^9.4.1",
     "file-type": "^18.0.0",
+    "fs-extra": "^11.1.0",
     "is-url": "^1.2.4",
     "loglevel": "^1.8.1",
     "ora": "^6.1.2",
@@ -66,6 +67,7 @@
     "@rollup/plugin-json": "^5.0.1",
     "@rollup/plugin-terser": "^0.1.0",
     "@rollup/plugin-typescript": "^9.0.2",
+    "@types/fs-extra": "^9.0.13",
     "@types/is-url": "^1.2.30",
     "@types/page-icon": "^0.3.4",
     "@types/prompts": "^2.4.1",

@@ -104,8 +104,6 @@ Whether to enable the immersive header. The default is `false`. Use the command 
 
 ```shell
 --transparent
-# or
--t
 ```
 
 #### [fullscreen]
@@ -115,8 +113,6 @@ Use the command below to enable this feature.
 
 ```shell
 --fullscreen
-# or
--f
 ```
 
 #### [resize]
@@ -133,6 +129,10 @@ Use the command below to disable this feature.
 #### [multi-arch]
 
 Package results support both Intel and m1 chips, only for MacOS. The default is `false`.
+
+```shell
+--targets xxx
+```
 
 ##### Preparation
 
@@ -155,4 +155,48 @@ rustup target add x86_64-apple-darwin
 --multi-arch
 # or
 -m
+```
+
+#### [targets]
+
+Select the output package format, support deb/appimage/all, if all is selected, deb and appimage will be packaged at the same time, this option only supports Linux, the default is `all`.
+
+
+#### [user-agent]
+
+Custom browser user agent, default is empty.
+```shell
+--user-agent <value>
+```
+
+#### [show-menu]
+
+Display the menu bar, not display it by default, enter the following command and it will be displayed. MacOS users are recommended to enable.
+
+```shell
+--show-menu
+```
+
+#### [show-system-tray]
+
+Display the notification tray, not display it by default, entering the following command will display.
+
+```shell
+--show-system-tray <value>
+```
+
+#### [system-tray-icon]
+
+The notification tray icon is only valid when the notification tray is displayed. The icon must be a 32x32~256x256 pixel image in .ico or .png format.
+
+```shell
+--system-tray-icon <value>
+```
+
+#### [copy-iter-file]
+
+Recursive copy, when the url is a local file path, if this option is enabled, the folder where the url path file is located and all sub-files are copied to the pake static folder, which is not enabled by default
+
+```shell
+--copy-iter-file
 ```
